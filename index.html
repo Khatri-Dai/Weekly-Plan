@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E6F8F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Week Plan">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Half Marathon Week Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one column. Header + totals, then day agenda (tabs + checklist), week map, running plan, protein. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --fg:#13212E; --muted:#5A6A7A; --line:#DCE2E9; --accent:#0E6F8F;
+  --work:#5C6F94; --study:#6A57D6; --gym:#D2601F; --run:#1B9A63; --meal:#B98A10; --commute:#8F9CA9; --rest:#B2BCC6;
+  --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E161E; --surface:#16212B; --fg:#E6EDF3; --muted:#98A8B8; --line:#26343F; --accent:#4FB8D8;
+    --work:#8DA2C8; --study:#A092F2; --gym:#F08A4B; --run:#4CC98C; --meal:#E2B340; --commute:#7C8A97; --rest:#55626E;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E161E; --surface:#16212B; --fg:#E6EDF3; --muted:#98A8B8; --line:#26343F; --accent:#4FB8D8;
+  --work:#8DA2C8; --study:#A092F2; --gym:#F08A4B; --run:#4CC98C; --meal:#E2B340; --commute:#7C8A97; --rest:#55626E;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.1}
+h2{font-size:22px}
+h3{font-size:16px}
+p{margin:0}
+.muted{color:var(--muted)}
+[data-c=work]{--c:var(--work)} [data-c=study]{--c:var(--study)} [data-c=gym]{--c:var(--gym)}
+[data-c=run]{--c:var(--run)} [data-c=meal]{--c:var(--meal)} [data-c=commute]{--c:var(--commute)} [data-c=rest]{--c:var(--rest)}
+
+header{display:flex;flex-direction:column;gap:14px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.totals{display:flex;flex-wrap:wrap;gap:8px 28px;padding-top:14px;border-top:1px solid var(--line)}
+.totals div{display:flex;flex-direction:column;min-width:0}
+.totals b{font-family:var(--font-display);font-size:22px;font-variant-numeric:tabular-nums;line-height:1.2}
+.totals span{font-size:12px;color:var(--muted)}
+
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sec-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px}
+
+/* day tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.tab{flex:1 0 auto;min-width:64px;font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tab b{font-size:14px;font-weight:600}
+.tab .dots{display:flex;gap:3px;height:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--c)}
+.tab[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tab.today b::after{content:" •";color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.day-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:140px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+
+.agenda{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:104px 1fr auto;gap:4px 14px;align-items:start;padding:11px 14px;border-top:1px solid var(--line);border-left:3px solid var(--c)}
+.row:first-child{border-top:0}
+.row.dim{padding-block:7px}
+.row.now{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.time{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
+.what{min-width:0;display:flex;gap:10px;align-items:flex-start}
+.what label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;min-width:0}
+.what input{margin:3px 0 0;width:16px;height:16px;accent-color:var(--accent);flex:none}
+.what .t{font-weight:600}
+.what .d{font-size:13px;color:var(--muted)}
+.row.done .t{text-decoration:line-through;color:var(--muted)}
+.pill{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.nowtag{font-size:11px;font-weight:600;color:var(--accent);margin-left:8px}
+
+/* week map */
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.mapwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.map{display:grid;grid-template-columns:44px repeat(7,minmax(78px,1fr));min-width:640px}
+.map .hd{padding:8px 4px;text-align:center;font-weight:600;font-size:13px;border-bottom:1px solid var(--line)}
+.map .hd.today{color:var(--accent)}
+.axis,.col{position:relative;height:var(--h)}
+.axis span{position:absolute;right:6px;font-size:11px;color:var(--muted);transform:translateY(-50%);font-variant-numeric:tabular-nums}
+.col{border-left:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--hr)}
+.blk{position:absolute;left:3px;right:3px;border-radius:5px;background:color-mix(in srgb,var(--c) 22%,var(--surface));border-left:3px solid var(--c);padding:1px 5px;font-size:11px;line-height:1.25;overflow:hidden;color:var(--fg)}
+.blk.slim{padding:0 5px;font-size:10px}
+
+/* running */
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.card p{font-size:14px;color:var(--muted)}
+.ladder{display:flex;align-items:flex-end;gap:6px;height:150px;padding-top:8px}
+.lcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%}
+.lcol i{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--run)}
+.lcol.cut i{background:color-mix(in srgb,var(--run) 40%,var(--surface))}
+.lcol.race i{background:var(--accent)}
+.lcol b{font-size:12px;font-variant-numeric:tabular-nums}
+.lcol span{font-size:11px;color:var(--muted)}
+.inline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:14px}
+
+/* protein */
+.calc{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input[type=number],input[type=date],select{font:inherit;font-size:15px;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+input[type=number]{width:96px}
+.result{display:flex;flex-wrap:wrap;gap:10px}
+.res{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;min-width:120px}
+.res b{display:block;font-family:var(--font-display);font-size:24px;font-variant-numeric:tabular-nums;line-height:1.2}
+.res span{font-size:12px;color:var(--muted)}
+.res.main{border-color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border-top:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+tfoot td{font-weight:600}
+.note{font-size:13px;color:var(--muted);max-width:68ch}
+
+@media (max-width:560px){
+  .row{grid-template-columns:1fr auto}
+  .row .time{grid-column:1 / -1}
+  .bar{width:100px}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="todayline">Weekly plan</div>
+    <h1>Half marathon training week</h1>
+    <p class="muted">Work, study, gym, runs and meals on one page. Tick items off as you go; ticks reset every Monday.</p>
+    <div class="totals" id="totals"></div>
+  </header>
+
+  <section aria-labelledby="h-day">
+    <div class="sec-head"><h2 id="h-day">Day by day</h2><span class="muted" style="font-size:13px">Times are a starting point. Edit to fit your commute.</span></div>
+    <div class="tabs" role="tablist" id="tabs" aria-label="Day of week"></div>
+    <div class="day-top">
+      <h3 id="dayname"></h3>
+      <div class="progress"><span id="proglabel"></span><div class="bar"><i id="progbar"></i></div></div>
+    </div>
+    <ul class="agenda" id="agenda"></ul>
+  </section>
+
+  <section aria-labelledby="h-week">
+    <div class="sec-head"><h2 id="h-week">Week at a glance</h2></div>
+    <div class="legend" id="legend"></div>
+    <div class="mapwrap"><div class="map" id="map"></div></div>
+    <p class="note">Why this layout: Tuesday is a pure study day with no training. Legs-heavy gym is Monday, the quality run is Thursday, and Friday is upper body only so Saturday&#39;s long run starts fresh. Sunday adds an easy recovery run before a light full-body session. Gym blocks are 1 h 45 including travel.</p>
+  </section>
+
+  <section aria-labelledby="h-run">
+    <div class="sec-head"><h2 id="h-run">Running: 3 days a week</h2></div>
+    <div class="grid3">
+      <div class="card" data-c="run"><div class="k">Thursday · Quality</div><h3>Intervals or tempo</h3><p>10 min warm-up, then 4 × 1 km at 10K effort with 2 min jog, or a 20-minute steady tempo. 10 min cool-down. Alternate each week.</p></div>
+      <div class="card" data-c="run"><div class="k">Saturday · Long</div><h3>Build with the ladder</h3><p>Easy pace, same route loop when possible. Take a gel or carbs every 40 minutes once the run goes past 75 minutes.</p></div>
+      <div class="card" data-c="run"><div class="k">Sunday · Recovery</div><h3>4–5 km very easy</h3><p>Short, slow and relaxed, the morning after the long run. Skip it if your legs feel sore, not just tired.</p></div>
+    </div>
+    <div class="sec-head" style="margin-top:8px"><h3>Long run ladder (km), 12 weeks</h3></div>
+    <div class="ladder" id="ladder" role="img" aria-label="Bar chart of long run distance by week, rising from 8 km to 19 km, then a taper and the 21.1 km race"></div>
+    <div class="inline">
+      <label class="field" for="race">Race date
+        <input type="date" id="race">
+      </label>
+      <span id="racein" class="muted"></span>
+    </div>
+    <p class="note">A generic starting ladder with a lighter week every fourth week. Start week 1 at your current longest comfortable run and shift the numbers up or down. If you are new to running, add a few weeks before week 1.</p>
+  </section>
+
+  <section aria-labelledby="h-pro">
+    <div class="sec-head"><h2 id="h-pro">Protein plan</h2></div>
+    <div class="calc">
+      <label class="field" for="wt">Body weight
+        <input type="number" id="wt" min="30" max="250" step="0.5" value="75" inputmode="decimal">
+      </label>
+      <label class="field" for="unit">Unit
+        <select id="unit"><option value="kg">kg</option><option value="lb">lb</option></select>
+      </label>
+      <label class="field" for="fac">Target per kg
+        <select id="fac">
+          <option value="1.6">1.6 g/kg · maintain</option>
+          <option value="1.8" selected>1.8 g/kg · lifting + running</option>
+          <option value="2.0">2.0 g/kg · higher training load</option>
+        </select>
+      </label>
+    </div>
+    <div class="result" id="result"></div>
+    <p class="note">Weight shown is an example. Enter yours. The 1.6–2.0 g/kg range is a common sports-nutrition guide for people who lift and run. If you have kidney disease or another medical condition, check with your doctor or a dietitian first.</p>
+
+    <h3>Sample training day</h3>
+    <div class="tablewrap"><table id="sample"></table></div>
+    <p class="note">Gym and long-run days: add a carb source at lunch and dinner, and an optional whey or milk shake within an hour after training. Easy days: same protein, slightly fewer carbs. Swap chicken or salmon for tofu, tempeh, lentils, eggs or tuna as you like.</p>
+  </section>
+</div>
+
+<script>
+(function(){
+var $=function(s,r){return (r||document).querySelector(s);};
+var m=function(t){var p=t.split(":");return +p[0]*60+ +p[1];};
+var fmt=function(x){var h=Math.floor(x/60),mi=x%60,ap=h>=12?"pm":"am";h=h%12||12;return h+(mi?":"+String(mi).padStart(2,"0"):"")+ap;};
+var B=function(s,e,c,t,d){return {s:m(s),e:m(e),c:c,t:t,d:d||""};};
+var store={
+  get:function(k,f){try{var v=localStorage.getItem(k);return v===null?f:JSON.parse(v);}catch(e){return f;}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+
+var BF="Greek yogurt, oats, berries and 1 egg (about 34 g protein)";
+var LUNCH="Chicken or tofu bowl with rice and vegetables (about 44 g)";
+var SNACK="Cottage cheese and fruit (about 18 g)";
+var DINNER="Salmon, quinoa and greens (about 40 g)";
+
+var GYM={
+  mon:["Lower body","Squat or leg press 4×6–8, Romanian deadlift 3×8, walking lunges 3×10 per leg, calf raise 3×12, plank 3×45 s"],
+  wed:["Upper body","Bench or dumbbell press 4×6–8, row 4×8, overhead press 3×8, lat pulldown 3×8–10, face pulls 2×15"],
+  fri:["Upper body + core","Incline dumbbell press 3×8, seated row 3×10, lateral raise 3×12, biceps/triceps superset 3×12, dead bug and Pallof press 3 rounds. No heavy legs before Saturday's long run"],
+  sun:["Full body + mobility","Goblet squat 3×10, hip thrust 3×10, one-arm row 3×10, push-ups 3×max, 10 min hip and ankle mobility"]
+};
+
+function remote(key,lift){
+  var g=GYM[key];
+  return [
+    B("06:30","06:45","rest","Wake up","Water, 5 min mobility"),
+    B("06:45","07:45","study","Study 1 (AM)","Focus hour before work starts"),
+    B("07:45","08:30","meal","Breakfast",BF),
+    B("09:00","12:30","work","Remote work"),
+    B("12:30","13:00","meal","Lunch",LUNCH),
+    B("13:00","15:30","work","Remote work"),
+    B("15:30","15:45","meal","Snack",SNACK),
+    B("15:45","17:00","work","Remote work"),
+    B("17:15","19:00","gym","Gym: "+g[0],g[1]+". 1 h 45 including travel."),
+    B("19:15","20:00","meal","Dinner",DINNER),
+    B("20:15","21:15","study","Study 2 (PM)"),
+    B("22:00","22:30","rest","Wind down","Lights out at 22:30")
+  ];
+}
+function office(kind){
+  var out=[
+    B("05:45","06:00","rest","Wake up","Water, 5 min mobility"),
+    B("06:00","07:00","study","Study 1 (AM)","Focus hour before the commute"),
+    B("07:00","07:30","meal","Breakfast",BF),
+    B("07:30","08:00","commute","Commute","Assumed 30 min each way. Edit if yours differs."),
+    B("08:00","12:30","work","Office"),
+    B("12:30","13:00","meal","Lunch",LUNCH),
+    B("13:00","15:30","work","Office"),
+    B("15:30","15:45","meal","Snack",SNACK),
+    B("15:45","18:00","work","Office")
+  ];
+  if(kind==="gym"){
+    out.push(
+      B("18:00","19:45","gym","Gym: "+GYM.wed[0],GYM.wed[1]+". 1 h 45 including travel, straight from the office."),
+      B("20:00","20:45","meal","Dinner",DINNER),
+      B("21:00","22:00","study","Study 2 (PM)")
+    );
+  } else if(kind==="run"){
+    out.push(
+      B("18:00","18:30","commute","Commute home"),
+      B("18:45","19:45","run","Run: intervals or tempo","4 × 1 km at 10K effort, or 20 min tempo, with warm-up and cool-down"),
+      B("19:45","20:30","meal","Dinner",DINNER),
+      B("20:45","21:45","study","Study 2 (PM)")
+    );
+  } else {
+    out.push(
+      B("18:00","18:30","commute","Commute home"),
+      B("18:45","19:30","meal","Dinner",DINNER),
+      B("19:45","21:45","study","Study 2 and 3 (PM)","Two hours in the evening. Take a 10 min break halfway.")
+    );
+  }
+  out.push(B("22:00","22:30","rest","Wind down","Lights out at 22:30"));
+  return out;
+}
+
+var DAYS=[
+  {n:"Mon",full:"Monday",mode:"Remote work 9–5",work:[540,1020],blocks:remote("mon")},
+  {n:"Tue",full:"Tuesday",mode:"Office 8–6 · study day",work:[480,1080],blocks:office("study")},
+  {n:"Wed",full:"Wednesday",mode:"Office 8–6",work:[480,1080],blocks:office("gym")},
+  {n:"Thu",full:"Thursday",mode:"Office 8–6",work:[480,1080],blocks:office("run")},
+  {n:"Fri",full:"Friday",mode:"Remote work 9–5",work:[540,1020],blocks:remote("fri")},
+  {n:"Sat",full:"Saturday",mode:"Day off",work:null,blocks:[
+    B("07:30","08:00","rest","Wake up","Water, light stretch"),
+    B("08:00","08:30","meal","Pre-run breakfast","Toast with honey, banana, small yogurt (about 15 g protein)"),
+    B("09:00","10:45","run","Run: long run","Distance from the ladder below, easy pace"),
+    B("11:00","11:45","meal","Recovery meal","Eggs or chicken wrap, fruit, milk (about 40 g protein)"),
+    B("13:30","14:30","study","Study 1 (PM)","Early block while the legs rest"),
+    B("16:00","16:15","meal","Snack",SNACK),
+    B("18:30","19:30","meal","Dinner",DINNER),
+    B("20:00","21:00","study","Study 2 (evening)"),
+    B("22:00","22:30","rest","Wind down","Lights out at 22:30")
+  ]},
+  {n:"Sun",full:"Sunday",mode:"Day off",work:null,blocks:[
+    B("08:00","08:30","rest","Wake up","Water, light stretch"),
+    B("08:30","08:50","meal","Pre-run snack","Banana and a small yogurt"),
+    B("09:00","09:40","run","Run: easy recovery 4–5 km","Very easy pace the day after the long run. Third run of the week."),
+    B("09:45","10:30","meal","Breakfast",BF),
+    B("10:45","11:45","study","Study 1 (AM)"),
+    B("12:30","14:15","gym","Gym: "+GYM.sun[0],GYM.sun[1]+". 1 h 45 including travel."),
+    B("14:15","15:00","meal","Lunch",LUNCH),
+    B("15:30","17:00","meal","Meal prep","Cook chicken, rice and quinoa for Monday to Wednesday lunches"),
+    B("17:00","17:15","meal","Snack",SNACK),
+    B("18:30","19:15","meal","Dinner",DINNER),
+    B("19:30","20:30","study","Study 2 (PM)"),
+    B("22:00","22:30","rest","Wind down","Lights out at 22:30. Monday starts at 06:30")
+  ]}
+];
+var CATS=[["work","Work"],["study","Study"],["gym","Gym"],["run","Run"],["meal","Meals"],["commute","Commute"],["rest","Wake / wind down"]];
+var SHORT={work:"Work",study:"Study",gym:"Gym",run:"Run",meal:"Meal",commute:"Commute",rest:""};
+
+/* date helpers */
+var now=new Date();
+var todayIdx=(now.getDay()+6)%7;
+var mon=new Date(now);mon.setDate(now.getDate()-todayIdx);
+var weekKey="wk-"+mon.getFullYear()+"-"+(mon.getMonth()+1)+"-"+mon.getDate();
+var nowMin=now.getHours()*60+now.getMinutes();
+$("#todayline").textContent=now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+
+/* totals */
+function sumCat(c){var t=0,n=0;DAYS.forEach(function(d){d.blocks.forEach(function(b){if(b.c===c){t+=b.e-b.s;n++;}});});return {mins:t,count:n};}
+var workH=0;DAYS.forEach(function(d){if(d.work)workH+=(d.work[1]-d.work[0])/60;});
+var tot=$("#totals");
+function stat(v,l,id){var d=document.createElement("div");var b=document.createElement("b");b.textContent=v;if(id)b.id=id;var s=document.createElement("span");s.textContent=l;d.appendChild(b);d.appendChild(s);tot.appendChild(d);}
+stat(workH+" h","work (2 remote, 3 office days)");
+stat((sumCat("study").mins/60)+" h","study (3 h Tuesday, 2 h other days)");
+stat(String(sumCat("gym").count),"gym sessions");
+stat(String(sumCat("run").count),"runs");
+stat("","protein per day","tprot");
+
+/* day view */
+var sel=todayIdx;
+var tabs=$("#tabs");
+DAYS.forEach(function(d,i){
+  var b=document.createElement("button");
+  b.className="tab"+(i===todayIdx?" today":"");
+  b.setAttribute("role","tab");b.id="tab-"+i;
+  var n=document.createElement("b");n.textContent=d.n;b.appendChild(n);
+  var dots=document.createElement("span");dots.className="dots";
+  ["gym","run"].forEach(function(c){if(d.blocks.some(function(x){return x.c===c;})){var k=document.createElement("i");k.className="dot";k.setAttribute("data-c",c);dots.appendChild(k);}});
+  b.appendChild(dots);
+  b.addEventListener("click",function(){sel=i;renderDay();});
+  tabs.appendChild(b);
+});
+
+function doneMap(){return store.get(weekKey,{});}
+function renderDay(){
+  var d=DAYS[sel];
+  Array.prototype.forEach.call(tabs.children,function(t,i){t.setAttribute("aria-selected",i===sel?"true":"false");});
+  $("#dayname").textContent=d.full+" · "+d.mode;
+  var ul=$("#agenda");ul.textContent="";
+  var done=doneMap();var total=0,count=0;
+  d.blocks.forEach(function(b,j){
+    var track=(b.c==="study"||b.c==="gym"||b.c==="run"||b.c==="meal");
+    var key=sel+":"+j;
+    var isDone=!!done[key];
+    if(track){total++;if(isDone)count++;}
+    var li=document.createElement("li");
+    li.className="row"+(isDone?" done":"")+(track?"":" dim");
+    li.setAttribute("data-c",b.c);
+    var live=(sel===todayIdx&&nowMin>=b.s&&nowMin<b.e);
+    if(live)li.className+=" now";
+    var time=document.createElement("div");time.className="time";time.textContent=fmt(b.s)+" – "+fmt(b.e);
+    var what=document.createElement("div");what.className="what";
+    var inner;
+    if(track){
+      inner=document.createElement("label");
+      var cb=document.createElement("input");cb.type="checkbox";cb.checked=isDone;cb.id="c-"+sel+"-"+j;
+      cb.addEventListener("change",function(){var dm=doneMap();if(cb.checked)dm[key]=1;else delete dm[key];store.set(weekKey,dm);renderDay();});
+      inner.appendChild(cb);
+    } else {inner=document.createElement("div");}
+    var txt=document.createElement("div");
+    var t=document.createElement("div");t.className="t";t.textContent=b.t;
+    if(live){var nt=document.createElement("span");nt.className="nowtag";nt.textContent="Now";t.appendChild(nt);}
+    txt.appendChild(t);
+    if(b.d){var dd=document.createElement("div");dd.className="d";dd.textContent=b.d;txt.appendChild(dd);}
+    inner.appendChild(txt);what.appendChild(inner);
+    var pill=document.createElement("span");pill.className="pill";
+    pill.textContent=(b.c==="rest"?"Rest":b.c==="commute"?"Commute":SHORT[b.c]);
+    li.appendChild(time);li.appendChild(what);li.appendChild(pill);
+    ul.appendChild(li);
+  });
+  $("#proglabel").textContent=count+" of "+total+" done";
+  $("#progbar").style.width=(total?Math.round(count/total*100):0)+"%";
+}
+renderDay();
+
+/* week map */
+var T0=330,T1=1350,PXH=34,H=(T1-T0)/60*PXH;
+var leg=$("#legend");
+CATS.forEach(function(c){var s=document.createElement("span");s.setAttribute("data-c",c[0]);var i=document.createElement("i");s.appendChild(i);s.appendChild(document.createTextNode(c[1]));leg.appendChild(s);});
+var map=$("#map");
+var corner=document.createElement("div");corner.className="hd";map.appendChild(corner);
+DAYS.forEach(function(d,i){var h=document.createElement("div");h.className="hd"+(i===todayIdx?" today":"");h.textContent=d.n;map.appendChild(h);});
+var axis=document.createElement("div");axis.className="axis";axis.style.setProperty("--h",H+"px");
+for(var hr=6;hr<=22;hr+=2){var sp=document.createElement("span");sp.style.top=((hr*60-T0)/60*PXH)+"px";sp.textContent=fmt(hr*60).replace(":00","");axis.appendChild(sp);}
+map.appendChild(axis);
+DAYS.forEach(function(d){
+  var col=document.createElement("div");col.className="col";col.style.setProperty("--h",H+"px");col.style.setProperty("--hr",PXH+"px");
+  d.blocks.forEach(function(b){
+    if(b.c==="rest")return;
+    var e=document.createElement("div");e.className="blk";e.setAttribute("data-c",b.c);
+    var hgt=(b.e-b.s)/60*PXH;
+    e.style.top=((b.s-T0)/60*PXH)+"px";e.style.height=Math.max(hgt-1,4)+"px";
+    if(hgt<26)e.className+=" slim";
+    if(hgt>=16){
+      var lab=SHORT[b.c];
+      if(b.c==="work")lab=d.mode.indexOf("Remote")===0?"Remote":"Office";
+      if(hgt>=44&&(b.c==="gym"||b.c==="run"))lab=b.t.replace(/^(Gym|Run): /,"");
+      e.textContent=lab;
+    }
+    e.title=fmt(b.s)+"–"+fmt(b.e)+" "+b.t;
+    col.appendChild(e);
+  });
+  map.appendChild(col);
+});
+
+/* long-run ladder */
+var LAD=[8,10,12,9,14,15,17,12,18,19,14,21.1];
+var lad=$("#ladder"),mx=21.1;
+LAD.forEach(function(v,i){
+  var c=document.createElement("div");c.className="lcol"+(i===LAD.length-1?" race":(i%4===3?" cut":""));
+  var b=document.createElement("b");b.textContent=(i===LAD.length-1?"21.1":v);
+  var bar=document.createElement("i");bar.style.height=Math.round(v/mx*100)+"px";
+  var w=document.createElement("span");w.textContent=(i===LAD.length-1?"Race":"W"+(i+1));
+  c.appendChild(b);c.appendChild(bar);c.appendChild(w);lad.appendChild(c);
+});
+var race=$("#race");
+race.value=store.get("race","");
+function raceIn(){
+  var el=$("#racein");
+  if(!race.value){el.textContent="Add your race date to see the countdown.";return;}
+  var p=race.value.split("-");var rd=new Date(+p[0],+p[1]-1,+p[2]);
+  var days=Math.round((rd-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000);
+  if(days<0){el.textContent="That date has passed.";return;}
+  var wk=Math.floor(days/7);
+  el.textContent=days+" days to go ("+wk+" full weeks)"+(wk<12?". Fewer than 12 weeks: start the ladder at a later week that matches your current long run.":".");
+}
+race.addEventListener("change",function(){store.set("race",race.value);raceIn();});
+raceIn();
+
+/* protein */
+var wt=$("#wt"),unit=$("#unit"),fac=$("#fac");
+var saved=store.get("prot",null);
+if(saved){wt.value=saved.w;unit.value=saved.u;fac.value=saved.f;}
+var SPLIT=[["Breakfast",.25],["Lunch",.30],["Snack",.15],["Dinner",.30]];
+function calc(){
+  var w=parseFloat(wt.value)||0;var kg=unit.value==="lb"?w/2.2046:w;
+  var tgt=Math.round(kg*parseFloat(fac.value));
+  store.set("prot",{w:wt.value,u:unit.value,f:fac.value});
+  var r=$("#result");r.textContent="";
+  function res(v,l,main){var d=document.createElement("div");d.className="res"+(main?" main":"");var b=document.createElement("b");b.textContent=v;var s=document.createElement("span");s.textContent=l;d.appendChild(b);d.appendChild(s);r.appendChild(d);}
+  res(tgt+" g","per day",true);
+  SPLIT.forEach(function(s){res(Math.round(tgt*s[1])+" g",s[0].toLowerCase());});
+  $("#tprot").textContent=tgt+" g";
+}
+[wt,unit,fac].forEach(function(el){el.addEventListener("input",calc);el.addEventListener("change",calc);});
+calc();
+
+var MEALS=[
+  ["Breakfast","7:00",[["Greek yogurt 0%, 200 g",20],["Rolled oats, 50 g",7],["Egg ×1",6],["Berries",1]]],
+  ["Lunch","12:30",[["Chicken breast, 120 g cooked",37],["Rice, 1 cup",5],["Vegetables and salad",2]]],
+  ["Snack","3:30",[["Cottage cheese, 150 g",18],["Fruit",0]]],
+  ["Dinner","8:00",[["Salmon, 130 g",29],["Quinoa, 1 cup cooked",8],["Greens",3]]]
+];
+var tb=$("#sample");
+var head=document.createElement("thead");var hr1=document.createElement("tr");
+["Meal","What","Protein"].forEach(function(h,i){var th=document.createElement("th");th.textContent=h;if(i===2)th.className="n";hr1.appendChild(th);});
+head.appendChild(hr1);tb.appendChild(head);
+var body=document.createElement("tbody");var sum=0;
+MEALS.forEach(function(ml){
+  var g=0;ml[2].forEach(function(it){g+=it[1];});sum+=g;
+  var tr=document.createElement("tr");
+  var a=document.createElement("td");a.textContent=ml[0]+" · "+ml[1];
+  var b=document.createElement("td");b.textContent=ml[2].map(function(it){return it[0];}).join(", ");
+  var c=document.createElement("td");c.className="n";c.textContent=g+" g";
+  tr.appendChild(a);tr.appendChild(b);tr.appendChild(c);body.appendChild(tr);
+});
+tb.appendChild(body);
+var foot=document.createElement("tfoot");var tr=document.createElement("tr");
+var f1=document.createElement("td");f1.textContent="Core meals";var f2=document.createElement("td");f2.textContent="Add a whey or milk shake after training for about +24 g";
+var f3=document.createElement("td");f3.className="n";f3.textContent=sum+" g";
+tr.appendChild(f1);tr.appendChild(f2);tr.appendChild(f3);foot.appendChild(tr);tb.appendChild(foot);
+})();
+</script>
+
+<!-- -->
+<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+</body>
+</html>
